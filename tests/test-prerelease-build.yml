@@ -1,0 +1,31 @@
+name: Test semver with prerelease and build metadata
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          input_string: '10.20.30-alpha.1+build.42'
+      - name: Assert outputs
+        env:
+          MAJOR: ${{ steps.action.outputs.major }}
+          MINOR: ${{ steps.action.outputs.minor }}
+          PATCH: ${{ steps.action.outputs.patch }}
+          PRERELEASE: ${{ steps.action.outputs.prerelease }}
+          BUILD: ${{ steps.action.outputs.build }}
+          FULL: ${{ steps.action.outputs.fullversion }}
+        run: |
+          echo "major=$MAJOR minor=$MINOR patch=$PATCH prerelease=$PRERELEASE build=$BUILD full=$FULL"
+          fail=0
+          [ "$MAJOR" = "10" ] || { echo "FAIL: major"; fail=1; }
+          [ "$MINOR" = "20" ] || { echo "FAIL: minor"; fail=1; }
+          [ "$PATCH" = "30" ] || { echo "FAIL: patch"; fail=1; }
+          [ "$PRERELEASE" = "alpha.1" ] || { echo "FAIL: prerelease"; fail=1; }
+          [ "$BUILD" = "build.42" ] || { echo "FAIL: build"; fail=1; }
+          [ "$FULL" = "10.20.30-alpha.1+build.42" ] || { echo "FAIL: fullversion"; fail=1; }
+          [ "$fail" = "0" ] || exit 1
+          echo "PASS"

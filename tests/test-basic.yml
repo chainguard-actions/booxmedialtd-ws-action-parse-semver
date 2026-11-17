@@ -1,0 +1,31 @@
+name: Test basic semver parsing
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          input_string: '1.2.3'
+      - name: Assert outputs
+        env:
+          MAJOR: ${{ steps.action.outputs.major }}
+          MINOR: ${{ steps.action.outputs.minor }}
+          PATCH: ${{ steps.action.outputs.patch }}
+          PRERELEASE: ${{ steps.action.outputs.prerelease }}
+          BUILD: ${{ steps.action.outputs.build }}
+          FULL: ${{ steps.action.outputs.fullversion }}
+        run: |
+          echo "major=$MAJOR minor=$MINOR patch=$PATCH prerelease=$PRERELEASE build=$BUILD full=$FULL"
+          fail=0
+          [ "$MAJOR" = "1" ] || { echo "FAIL: major"; fail=1; }
+          [ "$MINOR" = "2" ] || { echo "FAIL: minor"; fail=1; }
+          [ "$PATCH" = "3" ] || { echo "FAIL: patch"; fail=1; }
+          [ -z "$PRERELEASE" ] || { echo "FAIL: prerelease should be empty"; fail=1; }
+          [ -z "$BUILD" ] || { echo "FAIL: build should be empty"; fail=1; }
+          [ "$FULL" = "1.2.3" ] || { echo "FAIL: fullversion"; fail=1; }
+          [ "$fail" = "0" ] || exit 1
+          echo "PASS"

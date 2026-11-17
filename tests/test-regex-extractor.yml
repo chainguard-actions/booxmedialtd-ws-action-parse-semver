@@ -1,0 +1,32 @@
+name: Test version extraction with regex
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          input_string: 'refs/tags/release-4.5.6-rc.2'
+          version_extractor_regex: 'release-(.*)$'
+      - name: Assert outputs
+        env:
+          MAJOR: ${{ steps.action.outputs.major }}
+          MINOR: ${{ steps.action.outputs.minor }}
+          PATCH: ${{ steps.action.outputs.patch }}
+          PRERELEASE: ${{ steps.action.outputs.prerelease }}
+          BUILD: ${{ steps.action.outputs.build }}
+          FULL: ${{ steps.action.outputs.fullversion }}
+        run: |
+          echo "major=$MAJOR minor=$MINOR patch=$PATCH prerelease=$PRERELEASE build=$BUILD full=$FULL"
+          fail=0
+          [ "$MAJOR" = "4" ] || { echo "FAIL: major"; fail=1; }
+          [ "$MINOR" = "5" ] || { echo "FAIL: minor"; fail=1; }
+          [ "$PATCH" = "6" ] || { echo "FAIL: patch"; fail=1; }
+          [ "$PRERELEASE" = "rc.2" ] || { echo "FAIL: prerelease"; fail=1; }
+          [ -z "$BUILD" ] || { echo "FAIL: build should be empty"; fail=1; }
+          [ "$FULL" = "4.5.6-rc.2" ] || { echo "FAIL: fullversion"; fail=1; }
+          [ "$fail" = "0" ] || exit 1
+          echo "PASS"
